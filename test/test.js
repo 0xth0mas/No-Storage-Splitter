@@ -15,7 +15,7 @@ describe("Test", function () {
     const [owner, account1, account2] = await ethers.getSigners();
 
     const SplitterFactory = await ethers.getContractFactory("Splitter");
-    const splitter = await SplitterFactory.deploy([], []);
+    const splitter = await SplitterFactory.deploy([account1.address, account2.address], [1000, 2000]);
 
     return { splitter, owner, account1, account2 };
   }
@@ -24,7 +24,7 @@ describe("Test", function () {
     it("Should work", async function () {
       const { splitter, owner, account1, account2 } = await loadFixture(deploySplitter);
 
-      
+      console.log(await splitter.shares())
     });
   });
 });

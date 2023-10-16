@@ -38,7 +38,7 @@ contract Splitter {
                 revert(0, 0)
             }
 
-            mstore(0x00, 0x5935156009576013565B5959F35B60006000FDFB593560E01C808080806386d1)
+            mstore(0x00, 0x5935156009576013565B5959F35B60006000FD5B593560E01C808080806386d1)
             mstore(0x20, or(or(or(or(shl(152, 0xa69f146053576353edd8f71461), shl(136, add(0x83, mul(0x29, size)))), shl(72, 0x57630e57d4ce1461)), shl(56, add(0xf2, mul(0x5c, size)))), 0x576303314efa14))
             mstore(0x40, or(or(or(or(shl(248, 0x61), shl(232, add(0x0103, mul(0x75, size)))), shl(168, 0x57633a98ef391461)), shl(152, add(0x0114, mul(0x7e, size)))), shl(72, 0x5760006000F35B476001)))
 
