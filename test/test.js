@@ -17,6 +17,12 @@ describe("Test", function () {
     const SplitterFactory = await ethers.getContractFactory("Splitter");
     const splitter = await SplitterFactory.deploy([account1.address, account2.address], [1000, 2000]);
 
+    
+
+    const sendEth1 = { to: splitter.target, value: ethers.parseEther("0.1") }
+    const receiptTx1 = await owner.sendTransaction(sendEth1);
+    await receiptTx1.wait();
+
     return { splitter, owner, account1, account2 };
   }
 
@@ -24,7 +30,13 @@ describe("Test", function () {
     it("Should work", async function () {
       const { splitter, owner, account1, account2 } = await loadFixture(deploySplitter);
 
-      console.log(await splitter.shares())
+      console.log("Owner balance: " + await ethers.provider.getBalance(splitter.target));
+      console.log("Payment #1 balance: " + await ethers.provider.getBalance(account1.address));
+      console.log("Payment #2 balance: " + await ethers.provider.getBalance(account2.address));
+      console.log(await splitter.release())
+      console.log("Owner balance: " + await ethers.provider.getBalance(splitter.target));
+      console.log("Payment #1 balance: " + await ethers.provider.getBalance(account1.address));
+      console.log("Payment #2 balance: " + await ethers.provider.getBalance(account2.address));
     });
   });
 });
