@@ -62,6 +62,8 @@ describe("Test", function () {
       console.log("Payment #4 balance (ERC20): " + await testERC20.balanceOf(account4.address));
       await splitter.release();
       await splitter.releaseToken(testERC20.target, 0);
+      await testERC20.transfer(splitter.target, 10_000_000_000);
+      await splitter.releaseToken(testERC20.target, 0);
       console.log("Balances after: ");
       console.log("Contract balance (ETH): " + await ethers.provider.getBalance(splitter.target));
       console.log("Payment #1 balance (ETH): " + await ethers.provider.getBalance(account1.address));
