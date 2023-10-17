@@ -17,26 +17,53 @@ describe("Test", function () {
     const SplitterFactory = await ethers.getContractFactory("Splitter");
     const splitter = await SplitterFactory.deploy([account1.address, account2.address], [1000, 2000]);
 
-    
+    const TestERC20Factory = await ethers.getContractFactory("TestERC20");
+    const testERC20 = await TestERC20Factory.deploy();
 
-    const sendEth1 = { to: splitter.target, value: ethers.parseEther("0.1") }
-    const receiptTx1 = await owner.sendTransaction(sendEth1);
-    await receiptTx1.wait();
+    console.log(await ethers.provider.getCode(splitter.target));
 
-    return { splitter, owner, account1, account2 };
+
+    return { splitter, testERC20, owner, account1, account2 };
   }
 
   describe("Test", function () {
     it("Should work", async function () {
-      const { splitter, owner, account1, account2 } = await loadFixture(deploySplitter);
+      const { splitter, testERC20, owner, account1, account2 } = await loadFixture(deploySplitter);
 
-      console.log("Owner balance: " + await ethers.provider.getBalance(splitter.target));
-      console.log("Payment #1 balance: " + await ethers.provider.getBalance(account1.address));
-      console.log("Payment #2 balance: " + await ethers.provider.getBalance(account2.address));
-      console.log(await splitter.release())
-      console.log("Owner balance: " + await ethers.provider.getBalance(splitter.target));
-      console.log("Payment #1 balance: " + await ethers.provider.getBalance(account1.address));
-      console.log("Payment #2 balance: " + await ethers.provider.getBalance(account2.address));
+      console.log("Balances start: ");
+      console.log("Contract balance (ETH): " + await ethers.provider.getBalance(splitter.target));
+      console.log("Payment #1 balance (ETH): " + await ethers.provider.getBalance(account1.address));
+      console.log("Payment #2 balance (ETH): " + await ethers.provider.getBalance(account2.address));
+      console.log("Contract balance (ERC20): " + await testERC20.balanceOf(splitter.target));
+      console.log("Payment #1 balance (ERC20): " + await testERC20.balanceOf(account1.address));
+      console.log("Payment #2 balance (ERC20): " + await testERC20.balanceOf(account2.address));
+
+      const sendEth1 = { to: splitter.target, value: ethers.parseEther("0.1") }
+      const receiptTx1 = await owner.sendTransaction(sendEth1);
+      await receiptTx1.wait();
+
+      await testERC20.mintSome();
+      await testERC20.transfer(splitter.target, 10_000_000_000);
+
+      console.log("Balances before: ");
+      console.log("Contract balance (ETH): " + await ethers.provider.getBalance(splitter.target));
+      console.log("Payment #1 balance (ETH): " + await ethers.provider.getBalance(account1.address));
+      console.log("Payment #2 balance (ETH): " + await ethers.provider.getBalance(account2.address));
+      console.log("Contract balance (ERC20): " + await testERC20.balanceOf(splitter.target));
+      console.log("Payment #1 balance (ERC20): " + await testERC20.balanceOf(account1.address));
+      console.log("Payment #2 balance (ERC20): " + await testERC20.balanceOf(account2.address));
+      await splitter.release();
+      await splitter.releaseToken(testERC20.target, 0);
+      console.log("Balances after: ");
+      console.log("Contract balance (ETH): " + await ethers.provider.getBalance(splitter.target));
+      console.log("Payment #1 balance (ETH): " + await ethers.provider.getBalance(account1.address));
+      console.log("Payment #2 balance (ETH): " + await ethers.provider.getBalance(account2.address));
+      console.log("Contract balance (ERC20): " + await testERC20.balanceOf(splitter.target));
+      console.log("Payment #1 balance (ERC20): " + await testERC20.balanceOf(account1.address));
+      console.log("Payment #2 balance (ERC20): " + await testERC20.balanceOf(account2.address));
+      console.log(await splitter.recipients());
+      console.log(await splitter.shares());
+      console.log(await splitter.totalShares());
     });
   });
 });

@@ -10,15 +10,12 @@ contract Splitter {
         assembly {
             let size := mload(_recipients)
 
-            if iszero(size) {
+            if or(or(iszero(size), gt(size, 0xff)), iszero(eq(size, mload(_shares)))) {
                 revert(0, 0)
             }
-            if gt(size, 0xFF) {
-                revert(0, 0)
-            }
-            if iszero(eq(size, mload(_shares))) {
-                revert(0, 0)
-            }
+
+            _recipients := add(_recipients, 0x20)
+            _shares := add(_shares, 0x20)
 
             let offset
             let end := mul(0x20, size)
@@ -38,13 +35,15 @@ contract Splitter {
                 revert(0, 0)
             }
 
-            mstore(0x00, 0x5935156009576013565B5959F35B60006000FD5B593560E01C808080806386d1)
-            mstore(0x20, or(or(or(or(shl(152, 0xa69f146053576353edd8f71461), shl(136, add(0x83, mul(0x29, size)))), shl(72, 0x57630e57d4ce1461)), shl(56, add(0xf2, mul(0x5c, size)))), 0x576303314efa14))
-            mstore(0x40, or(or(or(or(shl(248, 0x61), shl(232, add(0x0103, mul(0x75, size)))), shl(168, 0x57633a98ef391461)), shl(152, add(0x0114, mul(0x7e, size)))), shl(72, 0x5760006000F35B476001)))
+            let memOffset := mload(0x40)
+            mstore(0x00, memOffset)
 
-            // release loops start at 0x57
+            mstore(memOffset, 0x5935156009576013565B5959F35B60006000FD5B593560E01C808080806386d1)
+            mstore(add(memOffset, 0x20), or(or(or(or(shl(152, 0xa69f146053576353edd8f71461), shl(136, add(0x83, mul(0x29, size)))), shl(72, 0x57630e57d4ce1461)), shl(56, add(0xed, mul(0x5c, size)))), 0x576303314efa14))
+            mstore(add(memOffset, 0x40), or(or(or(or(shl(248, 0x61), shl(232, add(0xfe, mul(0x75, size)))), shl(168, 0x57633a98ef391461)), shl(152, add(0x010f, mul(0x7e, size)))), shl(72, 0x5760006000F35B476001)))
+
             offset := 0
-            let memOffset := 0x57
+            memOffset := add(memOffset, 0x57)
             for {} 1 {} {
                 if iszero(lt(offset, end)) {
                     break
@@ -52,7 +51,7 @@ contract Splitter {
                 let tShares := mload(add(_shares, offset))
                 let tRecipient := mload(add(_recipients, offset))
 
-                mstore(memOffset, or(or(or(or(shl(216, 0x5959595963), shl(184, totalShares)), shl(168, 0x8663)), shl(152, tShares)), shl(128, 0x020473)))
+                mstore(memOffset, or(or(or(or(shl(216, 0x5959595963), shl(184, totalShares)), shl(168, 0x8663)), shl(136, tShares)), shl(112, 0x020473)))
                 mstore(add(memOffset, 0x12), or(shl(96, tRecipient), shl(72, 0x5AF116)))                  
 
                 offset := add(offset, 0x20)
@@ -61,7 +60,7 @@ contract Splitter {
 
             mstore(memOffset, 0x15600d57597F31966e21f1ea9a6ba07d0e49fe2fdca6cffa0bcce030b17899b2)
             mstore(add(memOffset, 0x20), 0x2526a6a9bdad5959A35959F35B6004356024356370a0823160E01B6000523060)
-            mstore(add(memOffset, 0x40), 0x0452602060006044600085FAFA15600d57600051818110600d570363a9059cbb)
+            mstore(add(memOffset, 0x40), 0x04526020600060446000855AFA15600d57600051818110600d570363a9059cbb)
             mstore(add(memOffset, 0x60), shl(192, 0x60E01B6000526001))
 
             memOffset := add(memOffset, 0x68)
@@ -119,7 +118,7 @@ contract Splitter {
             mstore(memOffset, or(or(or(or(shl(248, 0x61), shl(232, add(0x40, mul(size, 0x20)))), shl(192, 0x6000F35B63)), shl(160, totalShares)), shl(96, 0x60005260206000F3)))
             memOffset := add(memOffset, 0x14)
 
-            return(0x00, memOffset)
+            return(mload(0x00), sub(memOffset, mload(0x00)))
 
         }
 
@@ -214,7 +213,7 @@ contract Splitter {
         // 0087+(0x29*recipients): 6024 PUSH1 0x24 to stack to load token deduct amount offset (stack: deduct amount offset, token address)
         // 0089+(0x29*recipients): 35 CALLDATALOAD (stack: deduct amount, token address)
 
-        // 008a+(0x29*recipients): 6370a0823160E01B60005230600452602060006044600085FAFA15600d57600051818110600d5703
+        // 008a+(0x29*recipients): 6370a0823160E01B600052306004526020600060446000855AFA15600d57600051818110600d5703
         // -- 6370a08231 PUSH4 balanceOf selector (stack: balanceOf selector, deduct amount, token address)
         // -- 60E0 PUSH1 224 for SHL (stack: 0xE0, balanceOf selector, deduct amount, token address)
         // -- 1B shift balanceOf selector left 28 bytes (stack: shifted balanceOf selector, deduct amount, token address)
